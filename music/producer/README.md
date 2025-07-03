@@ -1,11 +1,42 @@
-# Producer - Générateur d'Événements Musicaux
+# 🎵 Data Producer & Simulation
 
-## TODO pour cette partie
+## 🎯 Objectif
+Générer des événements musicaux réalistes et les envoyer vers Kafka en temps réel.
 
-### Fichiers à créer :
-1. `music_event_generator.py` - Simulateur d'événements
-2. `kafka_producer.py` - Envoi vers Kafka
-3. `config.py` - Configuration du producer
+## 📋 Tâches principales
+- [ ] Simulateur d'événements musicaux (plays, likes, skips)
+- [ ] API de collecte de données en temps réel
+- [ ] Validation et formatage des données
+- [ ] Tests de charge
+
+## 🛠️ Technologies
+- Python (Flask/FastAPI)
+- Kafka Producer
+- Faker pour données fictives
+- Pandas pour manipulation de données
+
+## 📁 Structure des fichiers
+```
+producer/
+├── music_simulator.py      # Générateur principal d'événements
+├── api_collector.py        # API REST pour collecte
+├── data_schemas.py         # Définition des schémas de données
+├── kafka_producer.py       # Client Kafka
+├── tests/                  # Tests unitaires
+│   ├── test_simulator.py
+│   └── test_api.py
+└── requirements.txt        # Dépendances Python
+```
+
+## 🚀 Quick Start
+```bash
+cd producer/
+pip install -r requirements.txt
+python music_simulator.py
+```
+
+## 📊 Format des données générées
+Voir `../config/shared_config.py` pour le schéma complet des événements musicaux.
 
 ### Responsabilités :
 - Générer des événements musicaux réalistes
