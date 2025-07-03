@@ -1,0 +1,32 @@
+# Fichiers temporaires générés par le pipeline
+music_stats_*.csv
+music_analytics_*.png
+*.jsonl
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environnement virtuel
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Données temporaires
+storage/
+temp/
+tmp/

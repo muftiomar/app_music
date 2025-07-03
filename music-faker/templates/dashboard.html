@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Music-Faker Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .activity-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .activity-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .auto-refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .realtime-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-primary {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .activity-secondary {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #999;
+            text-align: right;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #28a745;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Badge temps réel -->
+        <div class="realtime-badge">
+            🔴 LIVE
+        </div>
+        
+        <header class="header">
+            <h1>🎵 Music-Faker Dashboard</h1>
+            <p>Analytics en temps réel des données musicales stockées dans HDFS</p>
+            <div style="margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <div class="auto-refresh-indicator" id="autoRefreshIndicator">
+                    <div class="pulse"></div>
+                    Auto-refresh actif
+                </div>
+                <span style="color: white; opacity: 0.9;">
+                    Dernière mise à jour: <span id="lastRefreshTime">--:--:--</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- Statistiques principales -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEvents">-</div>
+                <div class="stat-label">Événements Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueUsers">-</div>
+                <div class="stat-label">Utilisateurs Uniques</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueArtists">-</div>
+                <div class="stat-label">Artistes Uniques</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueTracks">-</div>
+                <div class="stat-label">Pistes Uniques</div>
+            </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">🎼 Top Genres Musicaux</div>
+                <div class="chart-container">
+                    <canvas id="genresChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">📱 Plateformes de Streaming</div>
+                <div class="chart-container">
+                    <canvas id="platformsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">🎬 Actions Utilisateurs</div>
+                <div class="chart-container">
+                    <canvas id="actionsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">⏱️ Distribution des Durées</div>
+                <div class="chart-container">
+                    <canvas id="durationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activité récente -->
+        <div class="activity-section">
+            <div class="activity-title">
+                🔥 Activité Récente
+                <div style="display: flex; gap: 10px;">
+                    <button class="refresh-btn" id="autoRefreshToggle" onclick="toggleAutoRefresh()">⏸️ Pause Auto</button>
+                    <button class="refresh-btn" onclick="refreshData()">🔄 Actualiser</button>
+                </div>
+            </div>
+            <div class="activity-list" id="activityList">
+                <div class="loading">Chargement des données...</div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>🎵 Music-Faker Dashboard - Pipeline Kafka → HDFS → Analytics</p>
+            <p>Dernière mise à jour: <span id="lastUpdate">-</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Variables globales pour les graphiques
+        let genresChart, platformsChart, actionsChart, durationChart;
+
+        // Configuration des graphiques
+        const chartConfig = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        };
+
+        // Couleurs pour les graphiques
+        const colors = [
+            '#667eea', '#764ba2', '#f093fb', '#f5576c',
+            '#4facfe', '#00f2fe', '#43e97b', '#38f9d7',
+            '#ffecd2', '#fcb69f', '#a8edea', '#fed6e3'
+        ];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            loadData();
+            
+            // Actualisation automatique toutes les 30 secondes
+            setInterval(loadData, 5000); // Mise à jour toutes les 5 secondes pour temps réel
+        });
+
+        function initCharts() {
+            // Graphique des genres
+            const genresCtx = document.getElementById('genresChart').getContext('2d');
+            genresChart = new Chart(genresCtx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: colors }] },
+                options: {
+                    ...chartConfig,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Graphique des plateformes
+            const platformsCtx = document.getElementById('platformsChart').getContext('2d');
+            platformsChart = new Chart(platformsCtx, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: colors }] },
+                options: chartConfig
+            });
+
+            // Graphique des actions
+            const actionsCtx = document.getElementById('actionsChart').getContext('2d');
+            actionsChart = new Chart(actionsCtx, {
+                type: 'polarArea',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: colors }] },
+                options: chartConfig
+            });
+
+            // Graphique des durées
+            const durationCtx = document.getElementById('durationChart').getContext('2d');
+            durationChart = new Chart(durationCtx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ 
+                    data: [], 
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true
+                }] },
+                options: {
+                    ...chartConfig,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        async function loadData() {
+            try {
+                await Promise.all([
+                    loadStats(),
+                    loadGenres(),
+                    loadPlatforms(),
+                    loadActions(),
+                    loadDurationStats(),
+                    loadRecentActivity()
+                ]);
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+            }
+        }
+
+        async function loadStats() {
+            const response = await axios.get('/api/stats');
+            const stats = response.data;
+            
+            document.getElementById('totalEvents').textContent = stats.total_events.toLocaleString();
+            document.getElementById('uniqueUsers').textContent = stats.unique_users.toLocaleString();
+            document.getElementById('uniqueArtists').textContent = stats.unique_artists.toLocaleString();
+            document.getElementById('uniqueTracks').textContent = stats.unique_tracks.toLocaleString();
+            document.getElementById('lastUpdate').textContent = stats.last_update;
+        }
+
+        async function loadGenres() {
+            const response = await axios.get('/api/top_genres');
+            const genres = response.data;
+            
+            genresChart.data.labels = genres.map(g => g.genre);
+            genresChart.data.datasets[0].data = genres.map(g => g.count);
+            genresChart.update();
+        }
+
+        async function loadPlatforms() {
+            const response = await axios.get('/api/top_platforms');
+            const platforms = response.data;
+            
+            platformsChart.data.labels = platforms.map(p => p.platform);
+            platformsChart.data.datasets[0].data = platforms.map(p => p.count);
+            platformsChart.update();
+        }
+
+        async function loadActions() {
+            const response = await axios.get('/api/top_actions');
+            const actions = response.data;
+            
+            actionsChart.data.labels = actions.map(a => a.action);
+            actionsChart.data.datasets[0].data = actions.map(a => a.count);
+            actionsChart.update();
+        }
+
+        async function loadDurationStats() {
+            const response = await axios.get('/api/duration_stats');
+            const stats = response.data;
+            
+            if (stats.histogram) {
+                durationChart.data.labels = stats.histogram.map(h => h.range);
+                durationChart.data.datasets[0].data = stats.histogram.map(h => h.count);
+                durationChart.update();
+            }
+        }
+
+        async function loadRecentActivity() {
+            const response = await axios.get('/api/recent_activity');
+            const activities = response.data;
+            
+            const activityList = document.getElementById('activityList');
+            
+            if (activities.length === 0) {
+                activityList.innerHTML = '<div class="loading">Aucune activité récente</div>';
+                return;
+            }
+            
+            activityList.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-content">
+                        <div class="activity-primary">
+                            🎵 ${activity.artist} - ${activity.track}
+                        </div>
+                        <div class="activity-secondary">
+                            👤 ${activity.user} • ${activity.action} • 📱 ${activity.platform}
+                        </div>
+                    </div>
+                    <div class="activity-time">
+                        ${new Date(activity.timestamp).toLocaleTimeString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function refreshData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.textContent = '🔄 Actualisation...';
+            refreshBtn.disabled = true;
+            
+            try {
+                await axios.get('/api/refresh');
+                await loadData();
+                updateLastRefreshTime();
+            } catch (error) {
+                console.error('Erreur lors de l\'actualisation:', error);
+            }
+            
+            refreshBtn.textContent = '🔄 Actualiser';
+            refreshBtn.disabled = false;
+        }
+
+        function updateLastRefreshTime() {
+            const indicator = document.getElementById('lastRefreshTime');
+            if (indicator) {
+                indicator.textContent = new Date().toLocaleTimeString();
+            }
+        }
+
+        // Auto-refresh toutes les 5 secondes
+        let autoRefreshInterval;
+        let isAutoRefreshEnabled = true;
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            autoRefreshInterval = setInterval(async () => {
+                if (isAutoRefreshEnabled) {
+                    try {
+                        console.log('🔄 Auto-refresh des données...');
+                        await loadData();
+                        updateLastRefreshTime();
+                    } catch (error) {
+                        console.error('Erreur auto-refresh:', error);
+                    }
+                }
+            }, 5000); // Rafraîchissement toutes les 5 secondes
+        }
+
+        function toggleAutoRefresh() {
+            isAutoRefreshEnabled = !isAutoRefreshEnabled;
+            const toggleBtn = document.getElementById('autoRefreshToggle');
+            const indicator = document.querySelector('.auto-refresh-indicator');
+            
+            if (isAutoRefreshEnabled) {
+                toggleBtn.textContent = '⏸️ Pause Auto';
+                indicator.style.display = 'inline-flex';
+                console.log('✅ Auto-refresh activé');
+            } else {
+                toggleBtn.textContent = '▶️ Auto';
+                indicator.style.display = 'none';
+                console.log('⏸️ Auto-refresh mis en pause');
+            }
+        }
+
+        // Démarrage automatique
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initialisation du dashboard temps réel...');
+            initCharts();
+            loadData();
+            startAutoRefresh();
+            updateLastRefreshTime();
+        });
+    </script>
+</body>
+</html>
