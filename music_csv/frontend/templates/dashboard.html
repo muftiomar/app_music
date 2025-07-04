@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Plateforme Musicale</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f7f7fa; }
+        h1 { color: #2c3e50; }
+        .chart-container { width: 80vw; margin: 30px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Plateforme Musicale</h1>
+    <div class="chart-container">
+        <h2>Top 10 artistes les plus écoutés</h2>
+        <canvas id="topArtistsChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h2>Genres préférés par heure</h2>
+        <canvas id="genresHourChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h2>Écoutes par plateforme dans les pays les plus actifs</h2>
+        <canvas id="countryPlatformChart"></canvas>
+    </div>
+    <script>
+    // Top artistes
+    fetch('/api/top_artists').then(r=>r.json()).then(data=>{
+        const ctx = document.getElementById('topArtistsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d=>d.artist),
+                datasets: [{
+                    label: 'Écoutes',
+                    data: data.map(d=>d.plays),
+                    backgroundColor: '#3498db'
+                }]
+            },
+            options: {responsive:true}
+        });
+    });
+    // Genres par heure
+    fetch('/api/genres_by_hour').then(r=>r.json()).then(data=>{
+        const ctx = document.getElementById('genresHourChart').getContext('2d');
+        const hours = data.map(d=>d.hour);
+        const genres = Object.keys(data[0]).filter(k=>k!=='hour');
+        const datasets = genres.map(g=>({
+            label: g,
+            data: data.map(d=>d[g]),
+            fill:false
+        }));
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: hours, datasets },
+            options: {responsive:true}
+        });
+    });
+    // Plateforme x pays
+    fetch('/api/country_platform').then(r=>r.json()).then(data=>{
+        const ctx = document.getElementById('countryPlatformChart').getContext('2d');
+        const countries = data.map(d=>d.country);
+        const platforms = Object.keys(data[0]).filter(k=>k!=='country');
+        const datasets = platforms.map(p=>({
+            label: p,
+            data: data.map(d=>d[p]),
+            stack: 'Stack 0'
+        }));
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels: countries, datasets },
+            options: {responsive:true, plugins:{legend:{position:'bottom'}} }
+        });
+    });
+    </script>
+</body>
+</html>
